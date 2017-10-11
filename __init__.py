@@ -2,7 +2,12 @@ from __future__ import absolute_import
 
 import os
 import time
-import websocket
+import pip
+try:
+    import websocket
+except:
+    pip.main(['install', 'websocket-client'])
+    import websocket
 import thread
 import time
 import multiprocessing
@@ -13,16 +18,11 @@ import octoprint.plugin
 class WebSocketSerialBridge(octoprint.plugin.StartupPlugin,
     octoprint.plugin.TemplatePlugin,
     octoprint.plugin.SettingsPlugin,
-    octoprint.plugin.EventHandlerPlugin,
     octoprint.plugin.SimpleApiPlugin):
     m,s = os.openpty()
     ws = websocket.WebSocketApp
-    status = ""
         
-    def on_event(self, event, payload):
-        self._logger.info("EVENT!: " + str(event))
-    
-    def get_settings_defaults(self):
+    def get_settings_defaults(self): # Set to default if not configured.
         return dict(url="ws://127.0.0.1:81")
     
     def get_template_configs(self):
@@ -64,7 +64,8 @@ class WebSocketSerialBridge(octoprint.plugin.StartupPlugin,
                           on_error = self.on_error,
                           on_close = self.on_close)
         self.ws.on_open = self.on_open
-        #self.ws.run_forever(skip_utf8_validation=False)    
+        self._logger.info("Websocket opened: " + self._settings.get(["url"]))
+        self.ws.run_forever(skip_utf8_validation=False)    
     
     def read(self, ws):
         while True:
@@ -81,13 +82,18 @@ class WebSocketSerialBridge(octoprint.plugin.StartupPlugin,
         rThread.start()
     
     def on_after_startup(self):
-        self._logger.info("Opened on " + os.ttyname(self.s))
+        try:
+            self._settings.get(["url"])
+        except:
+            self.get_settings_defaults()
+            self._logger.info("Default Settings")
+        self._logger.info("PTY Opened on " + os.ttyname(self.s))
+        self._settings.global_set(["serial","additionalPorts"], [os.ttyname(self.s)])
+        self._settings.save()
         websocket.enableTrace(False)
         self.ws_connect()
 
 __plugin_name__ = "WebSocket Serial Bridge"
-__plugin_version__ = "0.1.0"
+__plugin_version__ = "0.1.1"
 __plugin_description__ = "Emulates a serial port and pipes the data over websockets"
 __plugin_implementation__ = WebSocketSerialBridge()
-
-

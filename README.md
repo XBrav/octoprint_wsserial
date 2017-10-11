@@ -1,6 +1,6 @@
 # Websocket Serial Bridge
 
-Latest Release: 0.1.0 (Or, How I Learned to love Git)
+Latest Release: 0.1.1 (Or, How I Learned to love Git)
 
 # Project Description
 
@@ -25,6 +25,12 @@ If successful, you should see a serial port called "/dev/pts/1" on your Serial P
 - No code in place to handle re-establishing the websocket link outside of restarting Octoprint
 
 # Release Notes:
+
+0.1.1:
+
+- Added default settings (No more config.yaml manual edits!)
+- Cleaned up logging a bit
+- Added automatic detection of new serial port (no need to edit additional ports!)
 
 0.1.0:
 
